@@ -1,38 +1,40 @@
-const express = require("express");
+const { parse } = require("url");
+const { json } = require("micro");
+const { send } = require("micro");
 const http = require("http");
 const socketIo = require("socket.io");
 
-const app = express();
-const server = http.createServer(app);
+// Create HTTP server
+const server = http.createServer(async (req, res) => {
+  const parsedUrl = parse(req.url, true);
+
+  // Handle only POST requests to "/email-opened" endpoint
+  if (parsedUrl.pathname === "/email-opened" && req.method === "POST") {
+    const body = await json(req);
+    console.log("Received POST request to /email-opened");
+    console.log(body);
+    const email_id = body?.email_id;
+    console.log(email_id);
+    const timestamp = new Date().toISOString();
+
+    // Notify Discord bot of email open event
+    io.emit("emailOpened", { email_id, timestamp });
+
+    // Respond with a transparent 1x1 pixel GIF image
+    res.setHeader("Content-Type", "image/gif");
+    res.end(
+      Buffer.from(
+        "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
+        "base64"
+      )
+    );
+  } else {
+    send(res, 404, "Not Found");
+  }
+});
+
+// Create Socket.IO server
 const io = socketIo(server);
-
-// Middleware to parse JSON bodies
-app.use(express.json());
-
-app.get("/", async (req, res) => {
-  res.status(200).send("Hello, world!");
-});
-
-// Endpoint to handle notifications of email opens
-app.post("/email-opened", async (req, res) => {
-  console.log("Received POST request to /email-opened");
-  console.log(req.body);
-  const email_id = req.body?.email_id;
-  console.log(email_id);
-  const timestamp = new Date().toISOString();
-
-  // Notify Discord bot of email open event
-  io.emit("emailOpened", { email_id, timestamp });
-
-  // Respond with a transparent 1x1 pixel GIF image
-  res.set("Content-Type", "image/gif");
-  res.send(
-    Buffer.from(
-      "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
-      "base64"
-    )
-  );
-});
 
 // Socket.IO event handlers
 io.on("connection", (socket) => {
@@ -43,8 +45,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export handler function
+module.exports = async (req, res) => {
+  server(req, res);
+};
