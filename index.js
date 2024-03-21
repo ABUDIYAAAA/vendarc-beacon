@@ -9,6 +9,10 @@ const io = socketIo(server);
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+app.get("/", async (req, res) => {
+  res.status(200).send("Hello, world!");
+});
+
 // Endpoint to handle notifications of email opens
 app.post("/email-opened", async (req, res) => {
   console.log("Received POST request to /email-opened");
