@@ -38,7 +38,7 @@ app.get("/open-email", (req, res) => {
   const timestamp = new Date().toISOString();
 
   // Notify Discord bot of email open event
-  io.emit("emailOpened", { email_id, timestamp });
+  io.emit("emailOpened", { emailId, timestamp });
 
   res.set("Content-Type", "image/gif");
   res.send(
