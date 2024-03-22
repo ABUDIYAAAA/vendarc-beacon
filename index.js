@@ -10,8 +10,9 @@ const io = socketIo(server);
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// MongoDB Atlas connection URI
-const uri = process.env.MONGODB_URI;
+// MongoDB Atlas connection URI from environment variable
+const uri =
+  "mongodb+srv://91995:ey1OPz1YETc0kK48@cluster0.jgjq2cq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 if (!uri) {
   console.error(
@@ -19,6 +20,7 @@ if (!uri) {
   );
   process.exit(1);
 }
+
 const client = new MongoClient(uri);
 
 // Connect to MongoDB Atlas
@@ -80,6 +82,26 @@ app.get("/unopened-email-count", async (req, res) => {
   } catch (err) {
     console.error("Error getting count of unopened emails:", err);
     res.status(500).json({ error: "Failed to get count of unopened emails" });
+  }
+});
+
+// Endpoint to add a new email into the database
+app.post("/add-email", async (req, res) => {
+  console.log("Received POST request to /add-email");
+  const { name, email } = req.body;
+  const timestamp = new Date().toISOString();
+
+  try {
+    // Insert email into MongoDB Atlas
+    await client
+      .db("emailTrackingDB")
+      .collection("sentEmails")
+      .insertOne({ name, email, timestamp, opened: false });
+    console.log("Email added to MongoDB Atlas");
+    res.status(200).json({ message: "Email added successfully" });
+  } catch (err) {
+    console.error("Error adding email to MongoDB Atlas:", err);
+    res.status(500).json({ error: "Failed to add email" });
   }
 });
 
