@@ -30,6 +30,25 @@ app.post("/email-opened", async (req, res) => {
   );
 });
 
+app.get("/open-email", (req, res) => {
+  const emailId = req.query.emailId; // Extract email ID from query string
+
+  console.log("Email opened! Email ID:", emailId);
+
+  const timestamp = new Date().toISOString();
+
+  // Notify Discord bot of email open event
+  io.emit("emailOpened", { email_id, timestamp });
+
+  res.set("Content-Type", "image/gif");
+  res.send(
+    Buffer.from(
+      "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
+      "base64"
+    )
+  );
+});
+
 // Socket.IO event handlers
 io.on("connection", (socket) => {
   console.log("A bot has connected to the WebSocket server.");
