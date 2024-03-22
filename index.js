@@ -1,11 +1,9 @@
 const express = require("express");
 const http = require("http");
-const socketIo = require("socket.io");
 const { MongoClient } = require("mongodb");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -57,7 +55,6 @@ app.post("/email-opened", async (req, res) => {
   }
 
   // Notify Discord bot of email open event
-  io.emit("emailOpened", { emailId, timestamp });
 
   // Respond with a transparent 1x1 pixel GIF image
   res.set("Content-Type", "image/gif");
@@ -106,13 +103,6 @@ app.post("/add-email", async (req, res) => {
 });
 
 // Socket.IO event handlers
-io.on("connection", (socket) => {
-  console.log("A bot has connected to the WebSocket server.");
-
-  socket.on("disconnect", () => {
-    console.log("A bot has disconnected from the WebSocket server.");
-  });
-});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
