@@ -31,6 +31,29 @@ client
     console.error("Error connecting to MongoDB Atlas:", err);
   });
 
+// Endpoint to check for email exsistence
+app.get("/check-email", async (req, res) => {
+  console.log("Received GET request to /check-email");
+
+  const email = req.query.email; // Get email parameter from query string
+
+  if (!email) {
+    return res.status(400).json({ error: "Missing email parameter" });
+  }
+
+  try {
+    const emailExists = await client
+      .db("emailTrackingDB")
+      .collection("sentEmails")
+      .findOne({ email }); // Check if email exists in the collection
+
+    res.status(200).json({ exists: !!emailExists }); // Respond with existence flag
+  } catch (err) {
+    console.error("Error checking email existence:", err);
+    res.status(500).json({ error: "Failed to check email existence" });
+  }
+});
+
 // Endpoint to handle notifications of email opens
 app.post("/email-opened", async (req, res) => {
   console.log("Received POST request to /email-opened");
