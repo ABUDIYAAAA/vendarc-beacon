@@ -55,8 +55,8 @@ app.get("/check-email", async (req, res) => {
 });
 
 // Endpoint to handle notifications of email opens
-app.post("/email-opened", async (req, res) => {
-  console.log("Received POST request to /email-opened");
+app.get("/email-opened", async (req, res) => {
+  console.log("Received GET request to /email-opened");
   console.log(req.body);
   const emailId = req.body?.emailId;
   const timestamp = new Date().toISOString();
@@ -67,7 +67,7 @@ app.post("/email-opened", async (req, res) => {
       .db("emailTrackingDB")
       .collection("sentEmails")
       .updateOne(
-        { _id: emailId },
+        { email: emailId },
         { $set: { opened: true, openTimestamp: timestamp } }
       );
     console.log("Email marked as opened in MongoDB Atlas");
