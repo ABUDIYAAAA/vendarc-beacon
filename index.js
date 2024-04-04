@@ -58,37 +58,41 @@ app.get("/check-email", async (req, res) => {
   }
 });
 
-// Endpoint to handle notifications of email opens
-app.post("/email-opened", async (req, res) => {
-  console.log("Received POST request to /email-opened");
-  console.log(req.body);
-  const emailId = req.body?.emailId;
+// Endpoint to handle requests for the tracking pixel
+app.get("/tracking/:emailId", async (req, res) => {
+  console.log("Received request for tracking pixel");
+
+  const emailId = req.params.emailId;
   const timestamp = new Date().toISOString();
 
   try {
     // Update email as opened in MongoDB Atlas
-    await client
+    const result = await client
       .db("emailTrackingDB")
       .collection("sentEmails")
       .updateOne(
         { email: emailId },
         { $set: { opened: true, openTimestamp: timestamp } }
       );
-    console.log("Email marked as opened in MongoDB Atlas");
+
+    if (result.modifiedCount === 1) {
+      console.log("Email marked as opened in MongoDB Atlas");
+      // Respond with a transparent 1x1 pixel GIF image
+      res.set("Content-Type", "image/gif");
+      res.send(
+        Buffer.from(
+          "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
+          "base64"
+        )
+      );
+    } else {
+      console.log("Email not found in MongoDB Atlas");
+      res.status(404).send("Email not found");
+    }
   } catch (err) {
     console.error("Error marking email as opened in MongoDB Atlas:", err);
     res.status(500).json({ error: "Failed to mark email as opened" });
-    return;
   }
-
-  // Respond with a transparent 1x1 pixel GIF image
-  res.set("Content-Type", "image/gif");
-  res.send(
-    Buffer.from(
-      "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
-      "base64"
-    )
-  );
 });
 
 // Endpoint to get the count of emails waiting to be viewed
